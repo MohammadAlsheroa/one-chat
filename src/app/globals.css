@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  height: 100%;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1; /* stone-300 */
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e; /* stone-400 */
+}
+
+/* Stagger/reveal animation */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Background mesh orbs */
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(18px, -14px) scale(1.04); }
+  66%       { transform: translate(-10px, 9px) scale(0.97); }
+}
+
+@keyframes float-slower {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-22px, 14px) scale(1.03); }
+}
+
+.orb-1 { animation: float-slow 14s ease-in-out infinite; }
+.orb-2 { animation: float-slower 20s ease-in-out infinite; }
+
+/* Shimmer for skeleton loaders */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f5f5f4 25%, #e7e5e4 50%, #f5f5f4 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Prose overrides for chat markdown — light mode */
+.prose pre {
+  background: #f5f5f4 !important;
+  border: 1px solid #e7e5e4;
+  border-radius: 0.75rem;
+}
+.prose code {
+  color: #0f766e !important;
+  font-weight: 400;
+  background: #f0fdf4;
+  padding: 0.1em 0.3em;
+  border-radius: 0.25rem;
+}
+.prose code::before,
+.prose code::after {
+  display: none;
+}
+.prose a {
+  color: #059669 !important;
+  text-decoration: none;
+}
+.prose a:hover {
+  text-decoration: underline;
+}
+.prose table {
+  border-color: #e7e5e4;
+}
+.prose th {
+  color: #57534e;
+}
+.prose td {
+  border-color: #e7e5e4;
+}
+.prose th {
+  border-color: #e7e5e4;
+}
+.prose hr {
+  border-color: #e7e5e4;
+}
+.prose blockquote {
+  border-left-color: #059669;
+  color: #78716c;
+}
+.prose strong {
+  color: #1c1917;
+}
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: #1c1917;
+}
+.prose p {
+  color: #44403c;
+}
+.prose li::marker {
+  color: #a8a29e;
+}
