@@ -3,21 +3,16 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-const FREE_MODELS = [
-  'google/gemma-4-31b-it:free',
-  'google/gemma-4-26b-a4b-it:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-]
+const MODEL = 'llama-3.1-8b-instant'
 
-async function callOpenRouter(model: string, messages: { role: string; content: string }[], apiKey: string) {
-  return fetch('https://openrouter.ai/api/v1/chat/completions', {
+async function callGroq(messages: { role: string; content: string }[], apiKey: string) {
+  return fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ model, messages, stream: true }),
+    body: JSON.stringify({ model: MODEL, messages, stream: true }),
   })
 }
 
@@ -48,23 +43,13 @@ export async function POST(req: NextRequest) {
   }))
   messages.push({ role: 'user', content: message })
 
-  const apiKey = process.env.OPENROUTER_API_KEY!
+  const apiKey = process.env.GROQ_API_KEY!
 
-  // Try each model until one works
-  let response: Response | null = null
-  for (const model of FREE_MODELS) {
-    const res = await callOpenRouter(model, messages, apiKey)
-    if (res.ok && res.body) {
-      response = res
-      console.log('Using model:', model)
-      break
-    }
-    const errorText = await res.text().catch(() => '')
-    console.warn(`Model ${model} failed (${res.status}), trying next...`)
-  }
-
-  if (!response || !response.body) {
-    return new Response('All AI models busy, try again shortly', { status: 502 })
+  const response = await callGroq(messages, apiKey)
+  if (!response.ok || !response.body) {
+    const errorText = await response.text().catch(() => '')
+    console.error(`Groq error (${response.status}):`, errorText)
+    return new Response('AI model unavailable, try again shortly', { status: 502 })
   }
 
   let fullResponse = ''
