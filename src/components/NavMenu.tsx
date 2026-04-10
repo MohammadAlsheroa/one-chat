@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
+import { useTopLoader } from 'nextjs-toploader'
 
 export function NavMenu() {
   const { data: session, status } = useSession()
+  const topLoader = useTopLoader()
   const [open, setOpen] = useState(false)
+  const [avatarImage, setAvatarImage] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -17,9 +20,38 @@ export function NavMenu() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
+  useEffect(() => {
+    if (!session) return
+    function fetchAvatar() {
+      fetch('/api/profile')
+        .then((r) => r.json())
+        .then((data) => setAvatarImage(data.image ?? null))
+        .catch(() => {})
+    }
+    fetchAvatar()
+    window.addEventListener('profileImageUpdate', fetchAvatar)
+    return () => window.removeEventListener('profileImageUpdate', fetchAvatar)
+  }, [session])
+
   if (status === 'loading') return <div className="w-9 h-9" />
 
+  const username = (session?.user as any)?.username ?? session?.user?.name ?? 'User'
+  const initial = username[0]?.toUpperCase() ?? '?'
+
   return (
+    <div className="flex items-center gap-1">
+      {session && (
+        <Link
+          href="/profile"
+          className="w-8 h-8 rounded-full overflow-hidden bg-emerald-600 flex items-center justify-center shrink-0 hover:ring-2 hover:ring-emerald-400 transition-all"
+          title="Profile settings"
+        >
+          {avatarImage
+            ? <img src={avatarImage} alt={username} className="w-full h-full object-cover" />
+            : <span className="text-white text-sm font-semibold">{initial}</span>
+          }
+        </Link>
+      )}
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
@@ -57,7 +89,7 @@ export function NavMenu() {
               </Link>
               <div className="border-t border-stone-100" />
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => { topLoader.start(); signOut({ callbackUrl: '/' }) }}
                 className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors w-full text-left"
               >
                 <svg className="w-3.5 h-3.5 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -92,6 +124,7 @@ export function NavMenu() {
           )}
         </div>
       )}
+    </div>
     </div>
   )
 }

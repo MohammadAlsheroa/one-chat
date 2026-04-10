@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
+import { useTopLoader } from 'nextjs-toploader'
 import { useRouter, usePathname } from 'next/navigation'
 
 function UserMenu({ username }: { username: string }) {
+  const topLoader = useTopLoader()
   const [open, setOpen] = useState(false)
   const [avatarImage, setAvatarImage] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
@@ -47,7 +49,7 @@ function UserMenu({ username }: { username: string }) {
           </Link>
           <div className="border-t border-stone-100" />
           <button
-            onClick={() => signOut({ callbackUrl: '/' })}
+            onClick={() => { topLoader.start(); signOut({ callbackUrl: '/' }) }}
             className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors w-full text-left"
           >
             <svg className="w-3.5 h-3.5 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

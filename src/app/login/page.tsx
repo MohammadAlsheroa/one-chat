@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTopLoader } from 'nextjs-toploader'
 
 export default function LoginPage() {
   const router = useRouter()
+  const topLoader = useTopLoader()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -16,6 +18,7 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    topLoader.start()
 
     const result = await signIn('credentials', {
       email,
@@ -23,9 +26,9 @@ export default function LoginPage() {
       redirect: false,
     })
 
-    setLoading(false)
-
     if (result?.error) {
+      topLoader.done()
+      setLoading(false)
       setError('Invalid email or password')
     } else {
       router.push('/chat')
@@ -56,14 +59,14 @@ export default function LoginPage() {
           )}
 
           <div className="space-y-2">
-            <label className="block text-sm text-stone-700 font-medium">Email</label>
+            <label className="block text-sm text-stone-700 font-medium">Email or Username</label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full bg-white border border-stone-200 rounded-xl px-4 py-3 text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
-              placeholder="you@example.com"
+              placeholder="you@example.com or your_username"
             />
           </div>
 

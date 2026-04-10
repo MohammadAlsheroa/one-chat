@@ -4,11 +4,13 @@ import { useState, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTopLoader } from 'nextjs-toploader'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 
 export default function SignupPage() {
   const router = useRouter()
+  const topLoader = useTopLoader()
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -36,6 +38,7 @@ export default function SignupPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    topLoader.start()
 
     const res = await fetch('/api/signup', {
       method: 'POST',
@@ -46,6 +49,7 @@ export default function SignupPage() {
     if (!res.ok) {
       const data = await res.json()
       setError(data.error || 'Signup failed')
+      topLoader.done()
       setLoading(false)
       return
     }
