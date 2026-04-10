@@ -84,6 +84,34 @@ export async function POST(req: NextRequest) {
         await prisma.message.create({
           data: { conversationId, role: 'assistant', content: fullResponse },
         })
+
+        // Generate title on first exchange
+        if (conversation.messages.length === 0) {
+          try {
+            const titleRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: MODEL,
+                messages: [{
+                  role: 'user',
+                  content: `Generate a title of max 5 words for this conversation. Return only the title, nothing else.\n\nUser: ${message}\nAssistant: ${fullResponse}`,
+                }],
+                stream: false,
+                max_tokens: 20,
+              }),
+            })
+            if (titleRes.ok) {
+              const titleJson = await titleRes.json()
+              const title = titleJson.choices?.[0]?.message?.content?.trim() ?? ''
+              if (title) {
+                await prisma.conversation.update({ where: { id: conversationId }, data: { title } })
+                controller.enqueue(encoder.encode(`data: [TITLE:${title}]\n\n`))
+              }
+            }
+          } catch {}
+        }
+
         controller.enqueue(encoder.encode('data: [DONE]\n\n'))
         controller.close()
       } catch (err) {

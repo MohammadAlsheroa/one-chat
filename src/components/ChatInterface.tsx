@@ -86,6 +86,11 @@ export function ChatInterface({ conversationId, initialMessages = [], isOwner, i
           if (!line.startsWith('data: ')) continue
           const data = line.slice(6)
           if (data === '[DONE]') continue
+          if (data.startsWith('[TITLE:')) {
+            const title = data.slice(7, -1)
+            window.dispatchEvent(new CustomEvent('conversationTitleUpdate', { detail: { id: convId, title } }))
+            continue
+          }
           try {
             const { text: t } = JSON.parse(data)
             if (t) {

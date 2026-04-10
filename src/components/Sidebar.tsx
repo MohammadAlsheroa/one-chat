@@ -95,6 +95,15 @@ export function Sidebar() {
     if (renamingId) renameRef.current?.focus()
   }, [renamingId])
 
+  useEffect(() => {
+    function handleTitleUpdate(e: Event) {
+      const { id, title } = (e as CustomEvent).detail
+      setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, title } : c)))
+    }
+    window.addEventListener('conversationTitleUpdate', handleTitleUpdate)
+    return () => window.removeEventListener('conversationTitleUpdate', handleTitleUpdate)
+  }, [])
+
   async function newChat() {
     const res = await fetch('/api/conversations', {
       method: 'POST',
