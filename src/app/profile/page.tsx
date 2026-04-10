@@ -1,13 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
+
 interface ProfileData {
   username: string
   email: string
+  image: string | null
   createdAt: string
   conversationCount: number
   messageCount: number
@@ -36,6 +39,11 @@ export default function ProfilePage() {
   const [pwSuccess, setPwSuccess] = useState(false)
   const [pwLoading, setPwLoading] = useState(false)
 
+  // Avatar
+  const [avatarLoading, setAvatarLoading] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
   // Delete account
   const [deletePw, setDeletePw] = useState('')
   const [deleteError, setDeleteError] = useState('')
@@ -53,6 +61,55 @@ export default function ProfilePage() {
       .then(setProfile)
       .finally(() => setLoadingProfile(false))
   }, [status])
+
+  function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarError('')
+    if (file.size > MAX_FILE_SIZE) {
+      setAvatarError('Image must be under 2MB')
+      e.target.value = ''
+      return
+    }
+    setAvatarLoading(true)
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const b64 = reader.result as string
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: b64 }),
+      })
+      setAvatarLoading(false)
+      if (res.ok) {
+        setProfile((prev) => prev ? { ...prev, image: b64 } : prev)
+        window.dispatchEvent(new CustomEvent('profileImageUpdate'))
+      } else {
+        const data = await res.json()
+        setAvatarError(data.error || 'Failed to upload image')
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function handleRemoveAvatar() {
+    setAvatarLoading(true)
+    setAvatarError('')
+    const res = await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: null }),
+    })
+    setAvatarLoading(false)
+    if (res.ok) {
+      setProfile((prev) => prev ? { ...prev, image: null } : prev)
+      window.dispatchEvent(new CustomEvent('profileImageUpdate'))
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    } else {
+      const data = await res.json()
+      setAvatarError(data.error || 'Failed to remove image')
+    }
+  }
 
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault()
@@ -113,6 +170,48 @@ export default function ProfilePage() {
           </Link>
           <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Profile</h1>
           <p className="text-stone-400 text-sm mt-1">Manage your account</p>
+        </div>
+
+        {/* Profile picture */}
+        <div className="bg-white border border-stone-200 rounded-2xl p-6 mb-6">
+          <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wider mb-4">Profile Picture</h2>
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 bg-stone-100">
+              <img
+                src={profile.image ?? '/luffy.png'}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <label className="cursor-pointer bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium px-4 py-2 rounded-xl text-sm transition-all">
+                  {avatarLoading ? 'Uploading...' : 'Change photo'}
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleAvatarSelect}
+                    disabled={avatarLoading}
+                  />
+                </label>
+                {profile.image && (
+                  <button
+                    onClick={handleRemoveAvatar}
+                    disabled={avatarLoading}
+                    className="text-sm text-stone-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              {avatarError
+                ? <p className="text-xs text-red-500">{avatarError}</p>
+                : <p className="text-xs text-stone-400">JPG, PNG, WebP or GIF · Max 2MB</p>
+              }
+            </div>
+          </div>
         </div>
 
         {/* Account info */}

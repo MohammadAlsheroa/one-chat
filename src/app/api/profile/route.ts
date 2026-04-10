@@ -13,6 +13,7 @@ export async function GET() {
     select: {
       username: true,
       email: true,
+      image: true,
       createdAt: true,
       _count: { select: { conversations: true } },
     },
@@ -30,17 +31,41 @@ export async function GET() {
   return NextResponse.json({
     username: user.username,
     email: user.email,
+    image: user.image,
     createdAt: user.createdAt,
     conversationCount: user._count.conversations,
     messageCount,
   })
 }
 
+const MAX_IMAGE_B64 = 2.8 * 1024 * 1024
+
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { currentPassword, newPassword } = await req.json().catch(() => ({}))
+  const body = await req.json().catch(() => ({}))
+
+  // Image update branch
+  if ('image' in body) {
+    const { image } = body
+    if (image !== null) {
+      if (typeof image !== 'string' || !image.startsWith('data:image/')) {
+        return NextResponse.json({ error: 'Invalid image format' }, { status: 400 })
+      }
+      if (image.length > MAX_IMAGE_B64) {
+        return NextResponse.json({ error: 'Image too large. Maximum size is 2MB.' }, { status: 400 })
+      }
+    }
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { image: image ?? null },
+    })
+    return NextResponse.json({ success: true })
+  }
+
+  // Password update branch
+  const { currentPassword, newPassword } = body
 
   if (!currentPassword || !newPassword) {
     return NextResponse.json({ error: 'Both passwords required' }, { status: 400 })

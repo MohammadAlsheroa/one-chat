@@ -16,9 +16,10 @@ interface Props {
   initialMessages?: Message[]
   isOwner: boolean
   isForked?: boolean
+  userImage?: string | null
 }
 
-export function ChatInterface({ conversationId, initialMessages = [], isOwner, isForked }: Props) {
+export function ChatInterface({ conversationId, initialMessages = [], isOwner, isForked, userImage }: Props) {
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
@@ -179,13 +180,19 @@ export function ChatInterface({ conversationId, initialMessages = [], isOwner, i
           >
             <div className={`flex items-start gap-3 max-w-[75%] ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
               {/* Avatar */}
-              <div className={`w-7 h-7 rounded-full shrink-0 mt-0.5 flex items-center justify-center ${
-                m.role === 'user'
-                  ? 'bg-stone-200'
-                  : 'bg-emerald-50 border border-emerald-100'
-              }`}>
-                {m.role === 'assistant' && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
-              </div>
+              {m.role === 'user' ? (
+                <div className="w-7 h-7 rounded-full shrink-0 mt-0.5 overflow-hidden">
+                  <img
+                    src={isOwner ? (userImage ?? '/luffy.png') : '/luffy.png'}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-7 h-7 rounded-full shrink-0 mt-0.5 flex items-center justify-center bg-emerald-50 border border-emerald-100">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                </div>
+              )}
 
               {/* Bubble */}
               <div

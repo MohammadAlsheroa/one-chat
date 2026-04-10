@@ -12,6 +12,7 @@ model User {
   email         String         @unique
   passwordHash  String
   username      String         @unique
+  image         String?
   createdAt     DateTime       @default(now())
   conversations Conversation[]
 }

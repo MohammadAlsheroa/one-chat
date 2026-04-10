@@ -7,8 +7,21 @@ import { useRouter, usePathname } from 'next/navigation'
 
 function UserMenu({ username }: { username: string }) {
   const [open, setOpen] = useState(false)
+  const [avatarImage, setAvatarImage] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const initial = username?.[0]?.toUpperCase() ?? '?'
+
+  useEffect(() => {
+    function fetchAvatar() {
+      fetch('/api/profile')
+        .then((r) => r.json())
+        .then((data) => setAvatarImage(data.image ?? null))
+        .catch(() => {})
+    }
+    fetchAvatar()
+    window.addEventListener('profileImageUpdate', fetchAvatar)
+    return () => window.removeEventListener('profileImageUpdate', fetchAvatar)
+  }, [])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -49,8 +62,11 @@ function UserMenu({ username }: { username: string }) {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-3 w-full px-2 py-2 rounded-xl hover:bg-stone-100 transition-colors group"
       >
-        <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center shrink-0">
-          <span className="text-white text-sm font-semibold">{initial}</span>
+        <div className="w-8 h-8 rounded-full shrink-0 overflow-hidden bg-emerald-600 flex items-center justify-center">
+          {avatarImage
+            ? <img src={avatarImage} alt={username} className="w-full h-full object-cover" />
+            : <span className="text-white text-sm font-semibold">{initial}</span>
+          }
         </div>
         <div className="flex-1 text-left min-w-0">
           <p className="text-sm font-medium text-stone-800 truncate">{username}</p>
@@ -114,14 +130,6 @@ export function Sidebar() {
     const conv = await res.json()
     setConversations((prev) => [conv, ...prev])
     router.push(`/chat/${conv.id}`)
-  }
-
-  async function deleteConversation(id: string, e: React.MouseEvent) {
-    e.preventDefault()
-    e.stopPropagation()
-    await fetch(`/api/conversations/${id}`, { method: 'DELETE' })
-    setConversations((prev) => prev.filter((c) => c.id !== id))
-    if (pathname === `/chat/${id}`) router.push('/chat')
   }
 
   function startRename(c: Conversation, e: React.MouseEvent) {
@@ -289,15 +297,6 @@ export function Sidebar() {
                     >
                       <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={(e) => deleteConversation(c.id, e)}
-                      className="text-stone-400 hover:text-red-500 p-1 rounded transition-colors"
-                      title="Delete"
-                    >
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>

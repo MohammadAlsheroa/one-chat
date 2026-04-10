@@ -26,6 +26,10 @@ export default async function ConversationPage({ params }: Props) {
 
   const isOwner = session?.user?.id === conversation.userId
 
+  const userImage = isOwner && session?.user?.id
+    ? (await prisma.user.findUnique({ where: { id: session.user.id }, select: { image: true } }))?.image ?? null
+    : null
+
   return (
     <div className="flex h-[100dvh] bg-stone-50">
       <Sidebar />
@@ -43,6 +47,7 @@ export default async function ConversationPage({ params }: Props) {
           initialMessages={conversation.messages}
           isOwner={isOwner}
           isForked={!!conversation.forkedFromId}
+          userImage={userImage}
         />
       </div>
     </div>
