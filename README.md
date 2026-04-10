@@ -14,7 +14,7 @@ This is the tension that makes it interesting: radical transparency of content, 
 - **Complete anonymity** — usernames are never shown publicly. Every conversation appears as "Anonymous." Nothing can be traced back to you.
 - **Browse without an account** — anyone can read the full conversation feed without signing up.
 - **Fork and continue** — any logged-in user can copy a public conversation and continue it from where it left off. Forked chats are labeled as such.
-- **Real-time streaming** — AI responses stream in word-by-word via the OpenRouter API, with automatic model fallback.
+- **Real-time streaming** — AI responses stream in word-by-word via the Groq API using Llama 3.1.
 - **Minimal profile** — logged-in users can view their stats, change their password, and delete their account entirely.
 
 ---
@@ -27,7 +27,7 @@ This is the tension that makes it interesting: radical transparency of content, 
 | Styling | Tailwind CSS |
 | Auth | NextAuth.js — email/password, JWT sessions |
 | Database | PostgreSQL via Prisma ORM |
-| AI | OpenRouter API (Gemma, LLaMA, Nemotron — free tier) |
+| AI | Groq API (Llama 3.1 8B Instant — free tier) |
 | Deployment | Vercel |
 
 ---
@@ -93,15 +93,15 @@ NEXTAUTH_SECRET="your-random-secret"
 # Use http://localhost:3000 for local development
 NEXTAUTH_URL="http://localhost:3000"
 
-# API key from openrouter.ai (free tier available)
-OPENROUTER_API_KEY="your-openrouter-api-key"
+# API key from console.groq.com (free tier available)
+GROQ_API_KEY="your-groq-api-key"
 ```
 
-### Getting a free OpenRouter API key
+### Getting a free Groq API key
 
-1. Go to [openrouter.ai](https://openrouter.ai) and sign up
-2. Navigate to **Keys** and create a new key
-3. The free tier includes access to Gemma, LLaMA, Nemotron, and other models
+1. Go to [console.groq.com](https://console.groq.com) and sign up
+2. Navigate to **API Keys** and create a new key
+3. The free tier includes access to Llama 3.1 and other models
 
 ### Getting a free PostgreSQL database
 
